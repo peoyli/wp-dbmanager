@@ -8,6 +8,8 @@ if(!current_user_can('manage_database')) {
 ### Variables Variables Variables
 $base_name = plugin_basename('wp-dbmanager/database-manager.php');
 $base_page = 'admin.php?page='.$base_name;
+$return_page = 'admin.php?page=wp-dbmanager/database-manage.php';
+
 $current_date = mysql2date(sprintf(__('%s @ %s', 'wp-dbmanager'), get_option('date_format'), get_option('time_format')), gmdate('Y-m-d H:i:s', current_time('timestamp')));
 $backup = array();
 $backup_options = get_option('dbmanager_options');
@@ -50,7 +52,10 @@ if(!empty($_POST['do'])) {
 				do_action( 'wp_dbmanager_before_escapeshellcmd' );
 				$backup['command'] = $brace . escapeshellcmd( $backup['mysqldumppath'] ) . $brace . ' --force --host=' . escapeshellarg( $backup['host'] ) . ' --user=' . escapeshellarg( DB_USER ) . ' --password=' . escapeshellarg( DB_PASSWORD ) . $backup['port'] . $backup['sock'] . $backup['charset'] . ' --add-drop-table --skip-lock-tables ' . DB_NAME . ' > ' . $brace . escapeshellcmd( $backup['filepath'] ) . $brace;
 			}
-			$error = execute_backup( $backup['command'] );
+			$comment = !empty($_POST['comment']) ? base64_encode($_POST['comment']) : "";
+			$comment_file = !empty($comment) ? $backup['filepath'] . ".txt" : "";
+			$error = execute_backup( $backup['command'],$comment,$comment_file );
+
 			if(!is_writable( $backup['path'] ) ) {
 				$text = '<p style="color: red;">'.sprintf(__('Database Failed To Backup On \'%s\'. Backup Folder Not Writable.', 'wp-dbmanager'), $current_date).'</p>';
 			} elseif( is_file( $backup['filepath'] ) && filesize( $backup['filepath'] ) === 0 ) {
@@ -62,6 +67,7 @@ if(!empty($_POST['do'])) {
 			} else {
 				$text = '<p style="color: green;">'.sprintf(__('Database Backed Up Successfully On \'%s\'.', 'wp-dbmanager'), $current_date).'</p>';
 			}
+			header("Location: $return_page&info=" . base64_encode($text));
 			break;
 	}
 }
@@ -245,7 +251,11 @@ $disabled_function = false;
 			</tr>
 			<tr>
 				<th><?php _e('GZIP Database Backup File?', 'wp-dbmanager'); ?></th>
-				<td><input type="radio" id="gzip-yes" name="gzip" value="1" />&nbsp;<label for="gzip-yes"><?php _e('Yes', 'wp-dbmanager'); ?></label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="radio" id="gzip-no" name="gzip" value="0" checked="checked" />&nbsp;<label for="gzip-no"><?php _e('No', 'wp-dbmanager'); ?></label></td>
+				<td><input type="radio" id="gzip-yes" name="gzip" value="1" checked="checked" />&nbsp;<label for="gzip-yes"><?php _e('Yes', 'wp-dbmanager'); ?></label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="radio" id="gzip-no" name="gzip" value="0" />&nbsp;<label for="gzip-no"><?php _e('No', 'wp-dbmanager'); ?></label></td>
+			</tr>
+			<tr>
+				<th><?php _e('Backup comment:', 'wp-dbmanager'); ?></th>
+				<td><input type="text" style="width: 100%" name="comment" value=""></td>
 			</tr>
 			<tr>
 				<td colspan="2" align="center"><input type="submit" name="do" value="<?php _e('Backup', 'wp-dbmanager'); ?>" class="button" />&nbsp;&nbsp;<input type="button" name="cancel" value="<?php _e('Cancel', 'wp-dbmanager'); ?>" class="button" onclick="javascript:history.go(-1)" /></td>

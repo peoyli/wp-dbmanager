@@ -36,6 +36,15 @@ function dbmanager_textdomain() {
 }
 
 
+function wp_dbmanager_admin_style($hook) {
+    $dbm_base = dirname(plugin_basename(__FILE__)) . "/";
+    $subhook = substr($hook,0,strlen($dbm_base));
+    if (substr($hook,0,strlen($dbm_base)) !=  $dbm_base ) return;
+    if (file_exists(plugin_dir_path(__FILE__) . 'database-admin-css.css'))
+      wp_enqueue_style( 'wp_dbmanager_admin_css', plugins_url('database-admin-css.css', __FILE__) );
+}
+add_action( 'admin_enqueue_scripts', 'wp_dbmanager_admin_style' );
+
 ### Function: Database Manager Menu
 add_action('admin_menu', 'dbmanager_menu');
 function dbmanager_menu() {
@@ -60,6 +69,7 @@ add_action('dbmanager_cron_backup', 'cron_dbmanager_backup');
 add_action('dbmanager_cron_optimize', 'cron_dbmanager_optimize');
 add_action('dbmanager_cron_repair', 'cron_dbmanager_repair');
 function cron_dbmanager_backup() {
+	$current_date = mysql2date(sprintf(__('%s @ %s', 'wp-dbmanager'), get_option('date_format'), get_option('time_format')), gmdate('Y-m-d H:i:s', current_time('timestamp')));
 	$backup_options = get_option('dbmanager_options');
 	$backup_email = stripslashes($backup_options['backup_email']);
 	if(intval($backup_options['backup_period']) > 0) {
@@ -93,7 +103,10 @@ function cron_dbmanager_backup() {
 			do_action( 'wp_dbmanager_before_escapeshellcmd' );
 			$backup['command'] = $brace . escapeshellcmd( $backup['mysqldumppath'] ) . $brace . ' --force --host=' . escapeshellarg( $backup['host'] ).' --user=' . escapeshellarg( DB_USER ). ' --password=' . escapeshellarg( DB_PASSWORD ) . $backup['port'] . $backup['sock'] . ' --add-drop-table --skip-lock-tables ' . DB_NAME . ' > ' . $brace . escapeshellcmd( $backup['filepath'] ) . $brace;
 		}
-		execute_backup($backup['command']);
+
+		$comment = base64_encode("Cron backup at $current_date");
+		$comment_file = !empty($comment) ? $backup['filepath'] . ".txt" : "";
+		execute_backup($backup['command'],$comment,$comment_file);
 		if( ! empty( $backup_email ) )
 		{
 			dbmanager_email_backup( $backup_email, $backup['filepath'] );
@@ -241,7 +254,7 @@ function is_iis() {
 }
 
 ### Executes OS-Dependent mysqldump Command (By: Vlad Sharanhovich)
-function execute_backup($command) {
+function execute_backup($command,$comment="",$comment_file="") {
 	$backup_options = get_option('dbmanager_options');
 	check_backup_files();
 
@@ -261,8 +274,16 @@ function execute_backup($command) {
 		fclose( $fp );
 		system( $tmpnam.' > NUL', $error );
 		unlink( $tmpnam );
+                if (!$error && !empty($comment)) {
+			$comment = base64_decode($comment);
+			file_put_contents($comment_file,$comment);
+                }
 	} else {
 		passthru( $command, $error );
+		if (!empty($comment)) {
+			$comment = base64_decode($comment);
+			file_put_contents($comment_file,$comment);
+		}
 	}
 	return $error;
 }
@@ -386,6 +407,7 @@ function check_backup_files() {
 	}
 	if(sizeof($database_files) >= $backup_options['max_backup']) {
 		@unlink($backup_options['path'].'/'.$database_files[0]);
+		if (file_exists($backup['path'].'/'.$database_files[$i] . ".txt")) unlink($backup['path'].'/'.$database_files[$i] . ".txt");
 	}
 }
 
