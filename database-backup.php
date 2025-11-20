@@ -248,7 +248,7 @@ $disabled_function = false;
 			</tr>
 			<tr>
 				<th><?php _e('GZIP Database Backup File?', 'wp-dbmanager'); ?></th>
-				<td><input type="radio" id="gzip-yes" name="gzip" value="1" />&nbsp;<label for="gzip-yes"><?php _e('Yes', 'wp-dbmanager'); ?></label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="radio" id="gzip-no" name="gzip" value="0" checked="checked" />&nbsp;<label for="gzip-no"><?php _e('No', 'wp-dbmanager'); ?></label></td>
+				<td><input type="radio" id="gzip-yes" name="gzip" value="1" checked="checked" />&nbsp;<label for="gzip-yes"><?php _e('Yes', 'wp-dbmanager'); ?></label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="radio" id="gzip-no" name="gzip" value="0" />&nbsp;<label for="gzip-no"><?php _e('No', 'wp-dbmanager'); ?></label></td>
 			</tr>
 			<tr>
 				<td colspan="2" align="center"><input type="submit" name="do" value="<?php _e('Backup', 'wp-dbmanager'); ?>" class="button" />&nbsp;&nbsp;<input type="button" name="cancel" value="<?php _e('Cancel', 'wp-dbmanager'); ?>" class="button" onclick="javascript:history.go(-1)" /></td>
