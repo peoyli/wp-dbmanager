@@ -139,6 +139,7 @@ if( !empty( $_POST['do'] ) ) {
 								$style = ' class="alternate"';
 							}
 							$no++;
+							$checked = ($no==1) ? 'checked="checked" ' : '';
 							$file = dbmanager_parse_file( $backup['path'] . '/'. $database_file );
 							echo '<tr'. $style .'>';
 							echo '<td>' . number_format_i18n( $no ) . '</td>';
@@ -146,7 +147,7 @@ if( !empty( $_POST['do'] ) ) {
 							echo '<td>' . $file['database'] . '</td>';
 							echo '<td>' . $file['formatted_date'] . '</td>';
 							echo '<td>' . $file['formatted_size'] . '</td>';
-							echo '<td><input type="radio" name="database_file" value="'. esc_attr( $database_file ) .'" /></td></tr>';
+							echo '<td><input type="radio" ' . $checked . 'name="database_file" value="'. esc_attr( $database_file ) .'" /></td></tr>';
 							$totalsize += $file['size'];
 						}
 				} else {
