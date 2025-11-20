@@ -8,6 +8,8 @@ if ( ! current_user_can( 'install_plugins' ) ) {
 ### Variables Variables Variables
 $base_name = plugin_basename('wp-dbmanager/database-manager.php');
 $base_page = 'admin.php?page='.$base_name;
+$return_page = 'admin.php?page=wp-dbmanager/database-manage.php';
+
 $current_date = mysql2date(sprintf(__('%s @ %s', 'wp-dbmanager'), get_option('date_format'), get_option('time_format')), gmdate('Y-m-d H:i:s', current_time('timestamp')));
 $backup = array();
 $backup_options = get_option('dbmanager_options');
@@ -62,6 +64,7 @@ if(!empty($_POST['do'])) {
 				rename( $backup['filepath'], $backup['path'] . '/' . md5_file( $backup['filepath'] ) . '_-_' . $backup['filename'] );
 				$text = '<p style="color: green;">'.sprintf(__('Database Backed Up Successfully On \'%s\'.', 'wp-dbmanager'), $current_date).'</p>';
 			}
+			header("Location: $return_page&info=" . base64_encode($text));
 			break;
 	}
 }

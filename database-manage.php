@@ -15,7 +15,7 @@ $backup['mysqldumppath'] = $backup_options['mysqldumppath'];
 $backup['mysqlpath'] = $backup_options['mysqlpath'];
 $backup['path'] = $backup_options['path'];
 $backup['charset'] = ' --default-character-set="utf8mb4"';
-
+$text = !empty($_GET['info']) ? stripslashes(base64_decode($_GET['info'])) : "";
 
 ### Form Processing
 if( !empty( $_POST['do'] ) ) {
