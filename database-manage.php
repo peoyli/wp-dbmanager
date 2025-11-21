@@ -109,6 +109,7 @@ if( !empty( $_POST['do'] ) ) {
 	<div class="wrap">
 		<h2><?php _e('Manage Backup Database', 'wp-dbmanager'); ?></h2>
 		<p><?php _e('Choose A Backup Date To E-Mail, Restore, Download Or Delete', 'wp-dbmanager'); ?></p>
+<?php backup_form_action(0); ?>
 		<table class="widefat">
 			<thead>
 				<tr>
@@ -160,10 +161,17 @@ if( !empty( $_POST['do'] ) ) {
 				<th>&nbsp;</th>
 			</tr>
 		</table>
-		<table class="form-table">
+<?php backup_form_action(1); ?>
+	</div>
+</form>
+<?php
+function backup_form_action($email=1) { ?>
+    <table class="form-table">
+<?php if ($email == 1) { ?>
 			<tr>
 				<td colspan="5" align="center"><label for="email_to"><?php _e('E-mail database backup file to:', 'wp-dbmanager'); ?></label> <input type="text" id="email_to" name="email_to" size="30" maxlength="50" value="<?php echo get_option('admin_email'); ?>" dir="ltr" />&nbsp;&nbsp;<input type="submit" name="do" value="<?php _e('E-Mail', 'wp-dbmanager'); ?>" class="button" /></td>
 			</tr>
+<?php } ?>
 			<tr>
 				<td colspan="5" align="center">
 					<input type="submit" name="do" value="<?php _e('Download', 'wp-dbmanager'); ?>" class="button" />&nbsp;&nbsp;
@@ -172,5 +180,4 @@ if( !empty( $_POST['do'] ) ) {
 					<input type="button" name="cancel" value="<?php _e('Cancel', 'wp-dbmanager'); ?>" class="button" onclick="history.go(-1)" /></td>
 			</tr>
 		</table>
-	</div>
-</form>
+<?php } ?>
