@@ -35,6 +35,20 @@ function dbmanager_textdomain() {
 	load_plugin_textdomain( 'wp-dbmanager', false, dirname( plugin_basename( __FILE__ ) ) );
 }
 
+### Check for and activate optional stylesheet for the admin panel
+function wp_dbmanager_admin_style($hook) {
+	// Only load on wp-dbmanager admin pages
+	if (strpos($hook, 'wp-dbmanager') === false) {
+		return;
+	}
+
+	// Load optional custom stylesheet if available
+	$css_file = plugin_dir_path(__FILE__) . 'database-admin-css.css';
+	if (file_exists($css_file)) {
+		wp_enqueue_style('wp_dbmanager_admin_css', plugins_url('database-admin-css.css', __FILE__) );
+	}
+}
+add_action( 'admin_enqueue_scripts', 'wp_dbmanager_admin_style' );
 
 ### Function: Database Manager Menu
 add_action('admin_menu', 'dbmanager_menu');
