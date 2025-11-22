@@ -124,6 +124,8 @@ function cron_dbmanager_backup() {
 		execute_backup( $backup['command'] );
 		$new_filepath = $backup['path'] . '/' . md5_file( $backup['filepath'] ) . '_-_' . $backup['filename'];
 		rename( $backup['filepath'], $new_filepath );
+		$comment = "Cron backup at " . gmdate('Y-m-d H:i:s', $backup['date']);
+		file_put_contents("{$new_filepath}.txt",$comment);
 		$backup_email = stripslashes( $backup_options['backup_email'] );
 		if ( ! empty( $backup_email ) ) {
 			dbmanager_email_backup( $backup_email, $new_filepath );

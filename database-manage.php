@@ -91,6 +91,7 @@ if( !empty( $_POST['do'] ) ) {
 						$text .= '<p style="color: red;">' . sprintf( __( 'Unable To Delete Database Backup File On \'%s\'', 'wp-dbmanager' ), $file['formatted_date'] ) . '</p>';
 					} else {
 						$text .= '<p style="color: green;">' . sprintf( __( 'Database Backup File On \'%s\' Deleted Successfully', 'wp-dbmanager' ), $file['formatted_date'] ) . '</p>';
+						if (file_exists($backup['path'].'/'.$database_file . ".txt")) unlink($backup['path'].'/'.$database_file . ".txt");
 					}
 				} else {
 					$text = '<p style="color: red;">' . sprintf( __( 'Invalid Database Backup File On \'%s\'', 'wp-dbmanager' ), $file['formatted_date'] ) . '</p>';
@@ -141,6 +142,7 @@ if( !empty( $_POST['do'] ) ) {
 							}
 							$no++;
 							$checked = ($no==1) ? 'checked="checked" ' : '';
+							$comment = file_exists($backup['path'].'/'. $database_file . ".txt") ? file_get_contents($backup['path'].'/'. $database_file . ".txt") : "";
 							$file = dbmanager_parse_file( $backup['path'] . '/'. $database_file );
 							echo '<tr'. $style .'>';
 							echo '<td>' . number_format_i18n( $no ) . '</td>';
@@ -150,6 +152,11 @@ if( !empty( $_POST['do'] ) ) {
 							echo '<td>' . $file['formatted_size'] . '</td>';
 							echo '<td><input type="radio" ' . $checked . 'name="database_file" value="'. esc_attr( $database_file ) .'" /></td></tr>';
 							$totalsize += $file['size'];
+							if (!empty($comment)) {
+								echo '<tr><td>&nbsp;</td><td colspan="4">';
+								echo '<b>' . __("Comment", 'wp-dbmanager') . ':</b> ' . $comment . '</td>';
+								echo '<td>&nbsp;</td></tr>';
+							}
 						}
 				} else {
 					echo '<tr><td align="center" colspan="6">'.__('There Are No Database Backup Files Available.', 'wp-dbmanager').'</td></tr>';

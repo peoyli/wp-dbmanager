@@ -52,6 +52,7 @@ if(!empty($_POST['do'])) {
 				$backup['command'] = $brace . escapeshellcmd( $backup['mysqldumppath'] ) . $brace . ' --force --host=' . escapeshellarg( $backup['host'] ) . ' --user=' . escapeshellarg( DB_USER ) . ' --password=' . escapeshellarg( DB_PASSWORD ) . $backup['port'] . $backup['sock'] . $backup['charset'] . ' --add-drop-table --skip-lock-tables ' . DB_NAME . ' > ' . $brace . escapeshellcmd( $backup['filepath'] ) . $brace;
 			}
 			$error = execute_backup( $backup['command'] );
+
 			if ( ! is_writable( $backup['path'] ) ) {
 				$text = '<p style="color: red;">'.sprintf(__('Database Failed To Backup On \'%s\'. Backup Folder Not Writable.', 'wp-dbmanager'), $current_date).'</p>';
 			} elseif ( is_file( $backup['filepath'] ) && filesize( $backup['filepath'] ) === 0 ) {
@@ -61,7 +62,11 @@ if(!empty($_POST['do'])) {
 			} elseif ( $error ) {
 				$text = '<p style="color: red;">'.sprintf(__('Database Failed To Backup On \'%s\'.', 'wp-dbmanager'), $current_date).'</p>';
 			} else {
-				rename( $backup['filepath'], $backup['path'] . '/' . md5_file( $backup['filepath'] ) . '_-_' . $backup['filename'] );
+				$new_filepath = $backup['path'] . '/' . md5_file( $backup['filepath'] ) . '_-_' . $backup['filename'];
+				rename( $backup['filepath'], $new_filepath );
+				if (!empty($_POST['comment'])) {
+					file_put_contents("{$new_filepath}.txt",$_POST['comment']);
+				}
 				$text = '<p style="color: green;">'.sprintf(__('Database Backed Up Successfully On \'%s\'.', 'wp-dbmanager'), $current_date).'</p>';
 			}
 			header("Location: $return_page&info=" . base64_encode($text));
@@ -349,6 +354,10 @@ document.addEventListener('DOMContentLoaded', function() {
 			<tr>
 				<th><?php _e('GZIP Database Backup File?', 'wp-dbmanager'); ?></th>
 				<td><input type="radio" id="gzip-yes" name="gzip" value="1" checked="checked" />&nbsp;<label for="gzip-yes"><?php _e('Yes', 'wp-dbmanager'); ?></label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="radio" id="gzip-no" name="gzip" value="0" />&nbsp;<label for="gzip-no"><?php _e('No', 'wp-dbmanager'); ?></label></td>
+			</tr>
+			<tr>
+				<th><?php _e('Backup comment:', 'wp-dbmanager'); ?></th>
+				<td><input type="text" style="width: 100%" name="comment" value=""></td>
 			</tr>
 			<tr>
 				<td colspan="2" align="center"><input type="submit" name="do" value="<?php _e('Backup', 'wp-dbmanager'); ?>" class="button" />&nbsp;&nbsp;<input type="button" name="cancel" value="<?php _e('Cancel', 'wp-dbmanager'); ?>" class="button" onclick="javascript:history.go(-1)" /></td>
