@@ -76,18 +76,51 @@ $backup_path = stripslashes( $backup['path'] );
 ### MYSQL Base Dir
 $has_error = false;
 $disabled_function = false;
+
+### Detailed check status flags
+$security_has_error = false;
+$backup_has_error = false;
+$phpfn_has_error = false;
+
+/**
+ * Generate a collapsible check group header button
+ *
+ * @param  string $title     Group title (already translated)
+ * @param  bool   $hasError  Whether group has errors
+ * @return string HTML for button
+ *
+ */
+function dbmanager_check_button($title, $hasError = false) {
+	$status = $hasError ? _e('Some tests failed', 'wp-dbmanager') : __('All OK', 'wp-dbmanager');
+	$class = $hasError ? 'dbmanager-err' : 'dbmanager-ok';
+	$expanded = $hasError ? 'true' : 'false';
+
+	// Exactly match your original inline structure
+	return '<button type="button"
+		class="dbmanager-toggle ' . $class . '"
+		role="button"
+		aria-expanded="' . $expanded . '">
+		' . $title . ' — ' . $status . '
+		<span class="dbmanager-details">(' . __('Click for details', 'wp-dbmanager') . ')</span>
+		</button>';
+}
 ?>
 <?php if( ! empty( $text ) ) { echo '<div id="message" class="updated">'.$text.'</div>'; } ?>
 <!-- Checking Backup Status -->
 <div class="wrap">
 	<h2><?php _e('Backup Database', 'wp-dbmanager'); ?></h2>
-	<h3><?php _e('Checking Security Status', 'wp-dbmanager'); ?></h3>
-	<p>
+	<div class="dbmanager-check-group" aria-expanded="false">
+		<h3>
+			<?php print dbmanager_check_button(__('Checking Security Status','wp-dbmanager'));?>
+		</h3>
+		<div class="dbmanager-content">
+		<!-- no changes in checking code -->
 		<?php
 			if( is_iis() ) {
 				if ( ! is_file( $backup_path . '/Web.config' ) ) {
 					echo '<p style="color: red;">' . sprintf( __( 'Web.config is missing from %s', 'wp-dbmanager' ), $backup_path ) . '</p>';
 					$has_error = true;
+					$security_has_error = true;
 				} else {
 					echo '<p style="color: green;">' . sprintf( __( 'Web.config is present in %s', 'wp-dbmanager' ), $backup_path ) . '</p>';
 				}
@@ -95,6 +128,7 @@ $disabled_function = false;
 				if( ! is_file( $backup_path . '/.htaccess' ) ) {
 					echo '<p style="color: red;">' . sprintf( __( '.htaccess is missing from %s', 'wp-dbmanager' ), $backup_path ) . '</p>';
 					$has_error = true;
+					$security_has_error = true;
 				} else {
 					echo '<p style="color: green;">' . sprintf( __( '.htaccess is present in %s', 'wp-dbmanager' ), $backup_path ) . '</p>';
 				}
@@ -102,39 +136,48 @@ $disabled_function = false;
 			if( ! is_file( $backup_path . '/index.php' ) ) {
 				echo '<p style="color: red;">' . sprintf( __( 'index.php is missing from %s', 'wp-dbmanager' ), $backup_path ) . '</p>';
 				$has_error = true;
+				$security_has_error = true;
 			} else {
 				echo '<p style="color: green;">' . sprintf( __( 'index.php is present in %s', 'wp-dbmanager' ), $backup_path ) . '</p>';
 			}
 		?>
-	</p>
-	<h3><?php _e('Checking Backup Status', 'wp-dbmanager'); ?></h3>
-	<p>
+		<!-- end of checking code -->
+		</div>
+	</div>
+
+	<div class="dbmanager-check-group" aria-expanded="false">
+		<h3>
+			<?php print dbmanager_check_button(__('Checking Backup Status','wp-dbmanager'));?>
+		</h3>
+		<div class="dbmanager-content">
+		<!-- no changes in checking code -->
 		<?php _e('Checking Backup Folder', 'wp-dbmanager'); ?> <span dir="ltr">(<strong><?php echo $backup_path; ?></strong>)</span> ...<br />
 		<?php
 			if( realpath( $backup_path ) === false ) {
 				echo '<p style="color: red;">' . sprintf( __( '%s is not a valid backup path', 'wp-dbmanager' ), $backup_path ) . '</p>';
 				$has_error = true;
+				$backup_has_error = true;
 			} else {
 				if ( @is_dir( $backup_path ) ) {
 					echo '<p style="color: green;">' . __('Backup folder exists', 'wp-dbmanager') . '</p>';
 				} else {
 					echo '<p style="color: red;">' . sprintf(__('Backup folder does NOT exist. Please create \'backup-db\' folder in \'%s\' folder and CHMOD it to \'777\' or change the location of the backup folder under DB Option.', 'wp-dbmanager'), WP_CONTENT_DIR) . '</p>';
 					$has_error = true;
+					$backup_has_error = true;
 				}
 				if ( @is_writable( $backup_path ) ) {
 					echo '<p style="color: green;">' . __('Backup folder is writable', 'wp-dbmanager') . '</p>';
 				} else {
 					echo '<p style="color: red;">' . __('Backup folder is NOT writable. Please CHMOD it to \'777\'.', 'wp-dbmanager') . '</p>';
 					$has_error = true;
+					$backup_has_error = true;
 				}
 			}
-		?>
-	</p>
-	<p>
-		<?php
+
 			if( dbmanager_is_valid_path( $backup['mysqldumppath'] ) === 0 ) {
 				echo '<p style="color: red;">' . sprintf( __( '%s is not a valid backup mysqldump path', 'wp-dbmanager' ), stripslashes( $backup['mysqldumppath'] ) ) . '</p>';
 				$has_error = true;
+				$backup_has_error = true;
 			} else {
 				if ( @file_exists( stripslashes( $backup['mysqldumppath'] ) ) ) {
 					echo __('Checking MYSQL Dump Path', 'wp-dbmanager') . ' <span dir="ltr">(<strong>' . stripslashes( $backup['mysqldumppath'] ) . '</strong>)</span> ...<br />';
@@ -143,15 +186,13 @@ $disabled_function = false;
 					echo __('Checking MYSQL Dump Path', 'wp-dbmanager') . ' ...<br />';
 					echo '<p style="color: red;">' . __('MYSQL dump path does NOT exist. Please check your mysqldump path under DB Options. If uncertain, contact your server administrator.', 'wp-dbmanager') . '</p>';
 					$has_error = true;
+					$backup_has_error = true;
 				}
 			}
-		?>
-	</p>
-	<p>
-		<?php
 			if( dbmanager_is_valid_path( $backup['mysqlpath'] ) === 0 ) {
 				echo '<p style="color: red;">' . sprintf( __( '%s is not a valid backup mysql path', 'wp-dbmanager' ), stripslashes( $backup['mysqlpath'] ) ) . '</p>';
 				$has_error = true;
+				$backup_has_error = true;
 			} else {
 				if ( @file_exists( stripslashes($backup['mysqlpath'] ) ) ) {
 					echo __('Checking MYSQL Path', 'wp-dbmanager') . ' <span dir="ltr">(<strong>' . stripslashes($backup['mysqlpath']) . '</strong>)</span> ...<br />';
@@ -160,42 +201,59 @@ $disabled_function = false;
 					echo __('Checking MYSQL Path', 'wp-dbmanager') . ' ...<br />';
 					echo '<p style="color: red;">' . __('MYSQL path does NOT exist. Please check your mysql path under DB Options. If uncertain, contact your server administrator.', 'wp-dbmanager') . '</p>';
 					$has_error = true;
+					$backup_has_error = true;
 				}
 			}
 		?>
-	</p>
-	<p>
-		<?php _e('Checking PHP Functions', 'wp-dbmanager'); ?> <span dir="ltr">(<strong>passthru()</strong>, <strong>system()</strong> <?php _e('and', 'wp-dbmanager'); ?> <strong>exec()</strong>)</span> ...<br />
+		<!-- end of checking code -->
+		</div>
+	</div>
+
+	<div class="dbmanager-check-group" aria-expanded="false">
+		<h3>
+			<?php print dbmanager_check_button(__('Checking PHP Functions','wp-dbmanager'));?>
+		</h3>
+		<div class="dbmanager-content">
+		<!-- no changes in checking code -->
 		<?php
 			if( dbmanager_is_function_disabled( 'passthru' ) ) {
 				echo '<p style="color: red;"><span dir="ltr">passthru()</span> '.__('disabled', 'wp-dbmanager').'.</p>';
 				$disabled_function = true;
+				$phpfn_has_error = true;
 			} else if( ! function_exists( 'passthru' ) ) {
 				echo '<p style="color: red;"><span dir="ltr">passthru()</span> '.__('missing', 'wp-dbmanager').'.</p>';
 				$disabled_function = true;
+				$phpfn_has_error = true;
 			} else {
 				echo '<p style="color: green;"><span dir="ltr">passthru()</span> '.__('enabled', 'wp-dbmanager').'.</p>';
 			}
 			if( dbmanager_is_function_disabled( 'system' ) ) {
 				echo '<p style="color: red;"><span dir="ltr">system()</span> '.__('disabled', 'wp-dbmanager').'.</p>';
 				$disabled_function = true;
+				$phpfn_has_error = true;
 			} else if( ! function_exists( 'system' ) ) {
 				echo '<p style="color: red;"><span dir="ltr">system()</span> '.__('missing', 'wp-dbmanager').'.</p>';
 				$disabled_function = true;
+				$phpfn_has_error = true;
 			} else {
 				echo '<p style="color: green;"><span dir="ltr">system()</span> '.__('enabled', 'wp-dbmanager').'.</p>';
 			}
 			if( dbmanager_is_function_disabled( 'exec' ) ) {
 				echo '<p style="color: red;"><span dir="ltr">exec()</span> '.__('disabled', 'wp-dbmanager').'.</p>';
 				$disabled_function = true;
+				$phpfn_has_error = true;
 			} else if( ! function_exists( 'exec' ) ) {
 				echo '<p style="color: red;"><span dir="ltr">exec()</span> '.__('missing', 'wp-dbmanager').'.</p>';
 				$disabled_function = true;
+				$phpfn_has_error = true;
 			} else {
 				echo '<p style="color: green;"><span dir="ltr">exec()</span> '.__('enabled', 'wp-dbmanager').'.</p>';
 			}
 		?>
-	</p>
+		<!-- end of checking code -->
+		</div>
+	</div>
+
 	<p>
 		<?php
 			if( $disabled_function ) {
@@ -209,6 +267,48 @@ $disabled_function = false;
 	</p>
 	<p><i><?php _e('Note: The checking of backup status is still undergoing testing, it may not be accurate.', 'wp-dbmanager'); ?></i></p>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+	// Cache elements for better performance
+	const groups = document.querySelectorAll('.dbmanager-check-group');
+	const hasErrors = (content) => content.querySelectorAll('p[style*="color: red"]').length > 0;
+
+	// Update group status (reusable function)
+	const updateGroup = (group) => {
+		const content = group.querySelector('.dbmanager-content');
+		const toggle = group.querySelector('.dbmanager-toggle');
+		const hasErrorState = hasErrors(content);
+
+		// Update classes efficiently
+		toggle.className = `dbmanager-toggle ${hasErrorState ? 'dbmanager-err' : 'dbmanager-ok'}`;
+
+		// Update text content
+		const text = toggle.textContent;
+		toggle.textContent = text.replace('All OK', hasErrorState ? 'Some tests failed' : 'All OK');
+
+		// Set state and visibility
+		group.setAttribute('aria-expanded', hasErrorState ? 'true' : 'false');
+		content.style.display = hasErrorState ? 'block' : 'none';
+	};
+
+	// Initialize all groups
+	groups.forEach(updateGroup);
+
+	// Add click handlers efficiently using event delegation
+	document.addEventListener('click', (e) => {
+		const toggle = e.target.closest('.dbmanager-toggle');
+		if (!toggle) return;
+		e.preventDefault();
+		const group = toggle.closest('.dbmanager-check-group');
+		const content = group.querySelector('.dbmanager-content');
+		const isExpanded = group.getAttribute('aria-expanded') === 'true';
+
+		group.setAttribute('aria-expanded', isExpanded ? 'false' : 'true');
+		content.style.display = isExpanded ? 'none' : 'block';
+	});
+});
+</script>
+
 <!-- Backup Database -->
 <form method="post" action="<?php echo admin_url('admin.php?page='.plugin_basename(__FILE__)); ?>">
 	<?php wp_nonce_field('wp-dbmanager_backup'); ?>
