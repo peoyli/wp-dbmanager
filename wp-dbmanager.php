@@ -57,6 +57,7 @@ function dbmanager_menu() {
 		add_menu_page(__('Database', 'wp-dbmanager'), __('Database', 'wp-dbmanager'), 'install_plugins', 'wp-dbmanager/database-manager.php', '', 'dashicons-archive');
 	}
 	if (function_exists('add_submenu_page')) {
+    add_submenu_page('wp-dbmanager/database-manager.php', __('Database Info', 'wp-dbmanager'), __('Database Info', 'wp-dbmanager'), 'install_plugins', 'wp-dbmanager/database-manager.php');
 		add_submenu_page('wp-dbmanager/database-manager.php', __('Backup DB', 'wp-dbmanager'), __('Backup DB', 'wp-dbmanager'), 'install_plugins', 'wp-dbmanager/database-backup.php');
 		add_submenu_page('wp-dbmanager/database-manager.php', __('Manage Backup DB', 'wp-dbmanager'), __('Manage Backup DB', 'wp-dbmanager'), 'install_plugins', 'wp-dbmanager/database-manage.php');
 		add_submenu_page('wp-dbmanager/database-manager.php', __('Optimize DB', 'wp-dbmanager'), __('Optimize DB', 'wp-dbmanager'), 'install_plugins', 'wp-dbmanager/database-optimize.php');
