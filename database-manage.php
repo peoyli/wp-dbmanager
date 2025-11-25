@@ -153,7 +153,7 @@ if( !empty( $_POST['do'] ) ) {
 							echo '<td><input type="radio" ' . $checked . 'name="database_file" value="'. esc_attr( $database_file ) .'" /></td></tr>';
 							$totalsize += $file['size'];
 							if (!empty($comment)) {
-								echo '<tr><td>&nbsp;</td><td colspan="4">';
+								echo '<tr' . $style . '><td>&nbsp;</td><td colspan="4">';
 								echo '<b>' . __("Comment", 'wp-dbmanager') . ':</b> ' . $comment . '</td>';
 								echo '<td>&nbsp;</td></tr>';
 							}
