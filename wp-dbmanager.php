@@ -367,8 +367,14 @@ function dbmanager_email_backup( $to, $backup_file_path ) {
 			)
 			, $subject
 		);
+
+    $comment = file_exists("{$backup_file_path}.txt") ?
+			__( 'Backup Comment:', 'wp-dbmanager' ) . ' ' .
+			file_get_contents("{$backup_file_path}.txt") . "\n" : "";
+
 		$message = __( 'Website Name:', 'wp-dbmanager' ) . ' ' . wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ) . "\n" .
-			__( 'Website URL:', 'wp-dbmanager' ) . ' '. get_bloginfo( 'url' ) . "\n\n" .
+			__( 'Website URL:', 'wp-dbmanager' ) . ' '. get_bloginfo( 'url' ) . "\n" .
+			$comment . "\n" .
 			__( 'Backup File Name:', 'wp-dbmanager' ) . ' ' . $file['name'] . "\n" .
 			__( 'Backup File MD5 Checksum:', 'wp-dbmanager' ) . ' ' . $file['checksum'] . "\n" .
 			__( 'Backup File Date:', 'wp-dbmanager' ) . ' ' . $file['formatted_date'] . "\n" .
